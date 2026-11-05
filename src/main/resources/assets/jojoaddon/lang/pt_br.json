@@ -1,1 +1,5 @@
-{ "item.jojoaddon.test_item": "Item de Teste do Addon" }
+{
+  "item.jojoaddon.test_item": "Item de Teste do Addon",
+  "key.jojoaddon.barrage": "Barragem Infinita (segurar)",
+  "key.categories.jojoaddon": "JoJo Addon"
+}

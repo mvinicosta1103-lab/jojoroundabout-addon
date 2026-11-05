@@ -3,6 +3,7 @@ package com.example.jojoaddon;
 import com.mojang.logging.LogUtils;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import com.example.jojoaddon.net.BarrageNetwork;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
@@ -29,9 +30,14 @@ public class JojoAddon {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modBus);
         modBus.addListener(this::addCreative);
+        modBus.addListener(this::commonSetup);
 
         boolean roundabout = ModList.get().isLoaded("roundabout");
         LOGGER.info("[{}] Roundabout carregado: {}", MOD_ID, roundabout);
+    }
+
+    private void commonSetup(net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) {
+        event.enqueueWork(BarrageNetwork::register);
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
