@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.jojoaddon.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "MagiciansRedBarrageAnimMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
