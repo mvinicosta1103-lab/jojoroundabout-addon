@@ -8,6 +8,7 @@ import net.hydra.jojomod.event.index.PowerTypes;
 import net.hydra.jojomod.event.powers.StandPowers;
 import net.hydra.jojomod.event.powers.StandUser;
 import net.hydra.jojomod.event.powers.whitesnake.disc.DiscItemData;
+import net.hydra.jojomod.stand.powers.PowersDiverDown;
 import net.hydra.jojomod.stand.powers.PowersMagiciansRed;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -89,7 +90,11 @@ public class BarrageKeyClient {
                 // (respeita habilidades de cada Stand, cooldowns, discos, etc).
                 if (!user.roundabout$isBarraging()) {
                     StandPowers powers = user.roundabout$getStandPowers();
-                    if (powers instanceof PowersMagiciansRed) {
+                    if (powers instanceof PowersDiverDown dd && dd.isPiloting()) {
+                        // Diver Down mergulhado na terra: B = o mesmo que o M1 (barragem saindo
+                        // da terra). pilotInputAttack() ja ignora se a barragem esta acontecendo.
+                        dd.pilotInputAttack();
+                    } else if (powers instanceof PowersMagiciansRed) {
                         // No Magician's Red o input de barragem original e o de fogo (bolas de
                         // fogo / bafo). B inicia a barragem de SOCOS generica; o fogo continua
                         // no input original.

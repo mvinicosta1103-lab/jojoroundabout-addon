@@ -1,5 +1,6 @@
 package com.example.jojoaddon.mixin;
 
+import com.example.jojoaddon.client.AnimDebug;
 import net.hydra.jojomod.client.models.stand.MagiciansRedModel;
 import net.hydra.jojomod.client.models.stand.MagiciansRedOVAModel;
 import net.hydra.jojomod.client.models.stand.StandModel;
@@ -22,17 +23,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Este mixin aplica, no fim do setupAnim, as mesmas tres animacoes genericas que o
  * Star Platinum / The World usam (carga, barragem de socos e golpe final).
  *
- * Os nomes dos metodos estao nas duas versoes (dev = mappings oficiais, producao = SRG),
- * por isso remap = false e a descricao completa do metodo (evita pegar o metodo "bridge").
+ * remap = false e a descricao completa do metodo evitam pegar o metodo "bridge".
  */
 @Mixin(value = {MagiciansRedModel.class, MagiciansRedOVAModel.class}, remap = false)
 public abstract class MagiciansRedBarrageAnimMixin<T extends StandEntity> extends StandModel<T> {
 
     @Inject(
-            method = {
-                    "setupAnim(Lnet/hydra/jojomod/entity/stand/MagiciansRedEntity;FFFFF)V",
-                    "m_6973_(Lnet/hydra/jojomod/entity/stand/MagiciansRedEntity;FFFFF)V"
-            },
+            // O metodo real do Roundabout se chama "setupAnim" ate no jar de producao (o nome SRG
+            // m_6973_ so existe no metodo "bridge", que nao queremos).
+            method = "setupAnim(Lnet/hydra/jojomod/entity/stand/MagiciansRedEntity;FFFFF)V",
             at = @At("TAIL"),
             remap = false,
             require = 1
@@ -40,6 +39,13 @@ public abstract class MagiciansRedBarrageAnimMixin<T extends StandEntity> extend
     private void jojoaddon$genericBarrageAnimations(MagiciansRedEntity entity, float limbSwing,
                                                     float limbSwingAmount, float ageInTicks,
                                                     float netHeadYaw, float headPitch, CallbackInfo ci) {
+        AnimDebug.once("mixin-hit", "[jojoaddon] Mixin do setupAnim do Magician's Red esta ATIVO.");
+        if (entity.barrageChargeAnimationState.isStarted() || entity.barrageAnimationState.isStarted()
+                || entity.barrageEndAnimationState.isStarted()) {
+            AnimDebug.once("state-on", "[jojoaddon] Estado de animacao de barragem LIGADO no Magician's Red (anim byte="
+                    + entity.getAnimation() + ").");
+        }
+
         // Mesma escala de tempo do Star Platinum: o windup da config casa com a animacao de carga
         float windupSpeed = 1.0f;
         LivingEntity user = entity.getUser();

@@ -1,6 +1,7 @@
 package com.example.jojoaddon;
 
 import net.hydra.jojomod.event.powers.StandUser;
+import net.hydra.jojomod.stand.powers.PowersDiverDown;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -21,6 +22,14 @@ public final class BarrageHold {
     /** Chamado todo tick de jogador, nos dois lados, com o estado "B segurado". */
     public static void tick(Player player, boolean holding) {
         StandUser user = (StandUser) player;
+
+        // Diver Down: barragem saindo da terra (poder 62), com o proprio contador
+        if (user.roundabout$getActivePower() == PowersDiverDown.GROUND_DIVE_BARRAGE
+                && user.roundabout$getStandPowers() instanceof PowersDiverDown dd) {
+            DiverGroundBarrage.tick(dd, holding);
+            return;
+        }
+
         if (user.roundabout$getActivePower() != 5) return; // so durante a barragem (nao o windup)
 
         int length = user.roundabout$getStandPowers().getBarrageLength();

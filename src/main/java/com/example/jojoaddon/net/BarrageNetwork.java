@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import java.util.Set;
@@ -24,11 +25,16 @@ public final class BarrageNetwork {
     /** Jogadores que o servidor sabe que estao segurando B. */
     public static final Set<UUID> HOLDING = ConcurrentHashMap.newKeySet();
 
+    /** Lado cliente: ids de entidade de jogadores que seguram B (para o loop visual do Diver Down). */
+    public static final Set<Integer> LOOPING_CLIENT = ConcurrentHashMap.newKeySet();
+
     private BarrageNetwork() {}
 
     public static void register() {
         CHANNEL.registerMessage(0, HoldPacket.class,
                 HoldPacket::encode, HoldPacket::decode, HoldPacket::handle);
+        CHANNEL.registerMessage(1, HoldSyncPacket.class,
+                HoldSyncPacket::encode, HoldSyncPacket::decode, HoldSyncPacket::handle);
     }
 
     public static class HoldPacket {
@@ -50,6 +56,37 @@ public final class BarrageNetwork {
                 } else if (HOLDING.remove(sp.getUUID())) {
                     BarrageHold.release(sp);
                 }
+                // Avisa todos que veem esse jogador (e ele mesmo) para o loop visual
+                CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> sp),
+                        new HoldSyncPacket(sp.getId(), p.holding));
+            });
+            c.setPacketHandled(true);
+        }
+    }
+
+    /** Servidor -> clientes: o jogador (id da entidade) comecou/parou de segurar B. */
+    public static class HoldSyncPacket {
+        private final int entityId;
+        private final boolean holding;
+
+        public HoldSyncPacket(int entityId, boolean holding) {
+            this.entityId = entityId;
+            this.holding = holding;
+        }
+
+        public static void encode(HoldSyncPacket p, FriendlyByteBuf buf) {
+            buf.writeVarInt(p.entityId);
+            buf.writeBoolean(p.holding);
+        }
+
+        public static HoldSyncPacket decode(FriendlyByteBuf buf) {
+            return new HoldSyncPacket(buf.readVarInt(), buf.readBoolean());
+        }
+
+        public static void handle(HoldSyncPacket p, Supplier<NetworkEvent.Context> ctx) {
+            NetworkEvent.Context c = ctx.get();
+            c.enqueueWork(() -> {
+                if (p.holding) LOOPING_CLIENT.add(p.entityId); else LOOPING_CLIENT.remove(p.entityId);
             });
             c.setPacketHandled(true);
         }
